@@ -1,5 +1,5 @@
 {
-    "name": "status-server",
+    "name": "status-server-node-monitor",
     "version": "1.0.0",
     "main": "index.js",
     "license": "MIT",
