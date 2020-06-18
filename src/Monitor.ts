@@ -32,8 +32,8 @@ export class Monitor {
             {
                 id: nanoid(),
                 name,
-                description,
                 title,
+                description,
             },
             this,
         );
@@ -48,6 +48,7 @@ export class Monitor {
                 progress: { current: number; end: number };
                 currentOperation: string;
                 logsPart: string[];
+                logsErrorPart: string[];
             },
             onSend: () => {},
         ) => {
@@ -61,7 +62,7 @@ export class Monitor {
                 };
                 this.isMonitorDataSend = true;
             }
-
+            console.log(message);
             this.connection.send(message);
             onSend();
         },

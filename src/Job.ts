@@ -17,25 +17,31 @@ export class Job {
     private readonly description: string;
     private currentOperation: string = "";
     private logKindMessage: string[] = [];
+    private logKindErrorMessage: string[] = [];
+    private name: string;
 
     constructor(data: IJobData, client: Monitor) {
         this.client = client;
         this.id = data.id;
         this.description = data.description ?? "";
         this.title = data.title ?? "";
+        this.name = data.name;
     }
 
     private requestSend() {
-        const data = {
+        const data  = {
+            name: this.name,
             title: this.title,
             description: this.description,
             progress: this.progressFlag,
             currentOperation: this.currentOperation,
             logsPart: this.logKindMessage,
+            logsErrorPart: this.logKindErrorMessage,
         };
         // @ts-ignore couse throtling decorator
         this.client.requestUpdate(this.id, data, () => {
             this.logKindMessage = [];
+            this.logKindErrorMessage = [];
         });
     }
 
@@ -44,8 +50,21 @@ export class Job {
         this.requestSend();
     };
 
-    public log = (text: string) => {
-        this.logKindMessage.push(text);
+    public log = (text: string | string[]) => {
+        if(Array.isArray(text)){
+            this.logKindMessage = [...this.logKindMessage, ...text];
+        }else {
+            this.logKindMessage.push(text);
+        }
+        this.requestSend();
+    };
+
+    public error = (text: string | string[]) => {
+        if(Array.isArray(text)){
+            this.logKindErrorMessage = [...this.logKindErrorMessage, ...text];
+        }else {
+            this.logKindErrorMessage.push(text);
+        }
         this.requestSend();
     };
 

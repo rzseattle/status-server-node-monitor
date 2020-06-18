@@ -3,9 +3,10 @@
     "version": "1.0.0",
     "main": "index.js",
     "license": "MIT",
+    "type": "module",
     "scripts": {
         "dev": "nodemon --signal SIGTERM --delay 1000ms --exec babel-node --extensions \".ts\" ./src/test.ts",
-        "build": "docker build -t media.as-pl.com-builder ./build/docker/builder/ &&  docker run -v $(pwd):/project -v ~/.ssh:/root/.ssh media.as-pl.com-builder",
+        "build": "tsc -p tsconfig.json",
         "run": "docker build -t media.as-pl.com ./build/docker/app/ &&  docker run -v $(pwd):/project -p 4000:4000 media.as-pl.com"
     },
     "devDependencies": {
@@ -27,7 +28,6 @@
     },
     "dependencies": {
         "nanoid": "^3.1.10",
-        "redis": "^3.0.2",
         "ws": "^7.3.0"
     },
     "prettier": {
