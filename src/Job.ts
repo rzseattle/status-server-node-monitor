@@ -18,7 +18,34 @@ export class Job {
     private currentOperation: string = "";
     private logKindMessage: string[] = [];
     private logKindErrorMessage: string[] = [];
-    private name: string;
+    private readonly name: string;
+
+    private _isError: boolean = false;
+    get isError(): boolean {
+        return this._isError;
+    }
+    set isError(value: boolean) {
+        this._isError = value;
+        this.requestSend();
+    }
+
+    private _isDone: boolean = false;
+    get isDone(): boolean {
+        return this._isDone;
+    }
+    set isDone(value: boolean) {
+        this._isDone = value;
+        this.requestSend();
+    }
+
+
+    private _isLoggingToConsole: boolean = false;
+    get isLoggingToConsole(): boolean {
+        return this._isLoggingToConsole;
+    }
+    set isLoggingToConsole(value: boolean) {
+        this._isLoggingToConsole = value;
+    }
 
     constructor(data: IJobData, client: Monitor) {
         this.client = client;
@@ -37,6 +64,8 @@ export class Job {
             currentOperation: this.currentOperation,
             logsPart: this.logKindMessage,
             logsErrorPart: this.logKindErrorMessage,
+            done: this.isDone,
+            error: this._isError
         };
         // @ts-ignore couse throtling decorator
         this.client.requestUpdate(this.id, data, () => {
@@ -52,8 +81,12 @@ export class Job {
 
     public log = (text: string | string[]) => {
         if(Array.isArray(text)){
+            if(this.isLoggingToConsole){
+                text.forEach(line => console.log(line));
+            }
             this.logKindMessage = [...this.logKindMessage, ...text];
         }else {
+            console.log(text)
             this.logKindMessage.push(text);
         }
         this.requestSend();
@@ -61,8 +94,10 @@ export class Job {
 
     public error = (text: string | string[]) => {
         if(Array.isArray(text)){
+            text.forEach(line => console.log(line));
             this.logKindErrorMessage = [...this.logKindErrorMessage, ...text];
         }else {
+            console.log(text)
             this.logKindErrorMessage.push(text);
         }
         this.requestSend();

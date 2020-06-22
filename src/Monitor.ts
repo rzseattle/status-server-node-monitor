@@ -49,6 +49,8 @@ export class Monitor {
                 currentOperation: string;
                 logsPart: string[];
                 logsErrorPart: string[];
+                error: boolean;
+                done: boolean
             },
             onSend: () => {},
         ) => {
@@ -62,7 +64,6 @@ export class Monitor {
                 };
                 this.isMonitorDataSend = true;
             }
-            console.log(message);
             this.connection.send(message);
             onSend();
         },
