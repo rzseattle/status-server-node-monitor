@@ -5,8 +5,10 @@ export interface IJobInitData {
     title?: string;
     description?: string;
 }
-interface IJobData extends IJobInitData {
-    id: string;
+export interface IJobData extends IJobInitData {
+    title?: string;
+    description?: string;
+    labels?: string[];
 }
 
 export class Job {
@@ -18,7 +20,7 @@ export class Job {
     private currentOperation: string = "";
     private logKindMessage: string[] = [];
     private logKindErrorMessage: string[] = [];
-    private readonly name: string;
+    private readonly labels: string[];
 
     private _isError: boolean = false;
     get isError(): boolean {
@@ -38,7 +40,6 @@ export class Job {
         this.requestSend();
     }
 
-
     private _isLoggingToConsole: boolean = false;
     get isLoggingToConsole(): boolean {
         return this._isLoggingToConsole;
@@ -47,17 +48,16 @@ export class Job {
         this._isLoggingToConsole = value;
     }
 
-    constructor(data: IJobData, client: Monitor) {
+    constructor(data: { id: string } & IJobData, client: Monitor) {
         this.client = client;
         this.id = data.id;
         this.description = data.description ?? "";
         this.title = data.title ?? "";
-        this.name = data.name;
+        this.labels = data.labels ?? [];
     }
 
     private requestSend() {
-        const data  = {
-            name: this.name,
+        const data = {
             title: this.title,
             description: this.description,
             progress: this.progressFlag,
@@ -65,7 +65,8 @@ export class Job {
             logsPart: this.logKindMessage,
             logsErrorPart: this.logKindErrorMessage,
             done: this.isDone,
-            error: this._isError
+            error: this._isError,
+            labels: this.labels
         };
         // @ts-ignore couse throtling decorator
         this.client.requestUpdate(this.id, data, () => {
@@ -80,24 +81,24 @@ export class Job {
     };
 
     public log = (text: string | string[]) => {
-        if(Array.isArray(text)){
-            if(this.isLoggingToConsole){
-                text.forEach(line => console.log(line));
+        if (Array.isArray(text)) {
+            if (this.isLoggingToConsole) {
+                text.forEach((line) => console.log(line));
             }
             this.logKindMessage = [...this.logKindMessage, ...text];
-        }else {
-            console.log(text)
+        } else {
+            console.log(text);
             this.logKindMessage.push(text);
         }
         this.requestSend();
     };
 
     public error = (text: string | string[]) => {
-        if(Array.isArray(text)){
-            text.forEach(line => console.log(line));
+        if (Array.isArray(text)) {
+            text.forEach((line) => console.log(line));
             this.logKindErrorMessage = [...this.logKindErrorMessage, ...text];
-        }else {
-            console.log(text)
+        } else {
+            console.log(text);
             this.logKindErrorMessage.push(text);
         }
         this.requestSend();

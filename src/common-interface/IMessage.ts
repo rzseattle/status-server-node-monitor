@@ -1,3 +1,5 @@
+import { MonitorOverwrite } from "../Monitor";
+
 export interface IMessage {
     type: "log" | "job" ;
     monitorId: string;
@@ -18,7 +20,7 @@ export interface IJobMessage extends IMessage {
     done: boolean,
     error: boolean,
     monitorData?: {
-        name: string;
+        overwriteStrategy: MonitorOverwrite;
         title: string;
         description: string;
         labels: string[];
