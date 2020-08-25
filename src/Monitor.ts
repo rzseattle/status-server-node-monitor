@@ -14,9 +14,9 @@ export class Monitor {
     private id!: string;
     public readonly description: string;
     public readonly title: string;
-    private labels: string[] = [];
+    public labels: string[] = [];
     private isMonitorDataSend: boolean = false;
-    private overwriteStrategy = MonitorOverwrite.CreateNew;
+    public readonly overwriteStrategy: MonitorOverwrite;
 
     constructor(
         connection: Connection,
@@ -26,6 +26,7 @@ export class Monitor {
         this.description = options.description || "";
         this.title = options.title || "";
         this.labels = options.labels || [];
+        this.overwriteStrategy = options.overwriteStrategy || MonitorOverwrite.CreateNew;
 
         connection.requestId(null).then((id) => {
             this.id = id as string;
@@ -58,7 +59,7 @@ export class Monitor {
     public async createJob(data: IJobData): Promise<Job> {
         // waiting for monitor id
         await this.getId();
-        const jobId = await this.connection.requestId(this);
+        const jobId = await this.connection.requestId(this, data.labels);
         return new Job(
             {
                 id: jobId,

@@ -1,6 +1,6 @@
 import NodeWS from "ws";
 import { nanoid } from "nanoid";
-import { Monitor } from "./Monitor";
+import { Monitor, MonitorOverwrite } from "./Monitor";
 
 interface IPendingRequest {
     elementType: "monitor" | "job";
@@ -41,7 +41,7 @@ export class Connection {
         }
     };
 
-    public requestId = async (monitor: Monitor | null = null): Promise<string> => {
+    public requestId = async (monitor: Monitor | null = null, jobLabels: string[] = []): Promise<string> => {
         let monitorId: string | null = null;
         if (monitor) {
             monitorId = await monitor.getId();
@@ -58,6 +58,9 @@ export class Connection {
             this.idRequestsPending.push(request);
             this.send({
                 type: "id-request",
+                overwriteStrategy: monitor?.overwriteStrategy || MonitorOverwrite.CreateNew,
+                monitorLabels: monitor?.labels,
+                jobLabels,
                 elementType: request.elementType,
                 monitorId: request.monitorId,
                 controlKey1: request.controlKey1,
