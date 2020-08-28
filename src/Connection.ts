@@ -1,6 +1,7 @@
 import NodeWS from "ws";
 import { nanoid } from "nanoid";
 import { Monitor, MonitorOverwrite } from "./Monitor";
+import { IJobData } from "./Job";
 
 interface IPendingRequest {
     elementType: "monitor" | "job";
@@ -41,14 +42,18 @@ export class Connection {
         }
     };
 
-    public requestId = async (monitor: Monitor | null = null, jobLabels: string[] = []): Promise<string> => {
+    public requestId = async (
+        type: "monitor" | "job",
+        monitor: Monitor | null = null,
+        job: IJobData | null = null,
+    ): Promise<string> => {
         let monitorId: string | null = null;
-        if (monitor) {
+        if (monitor && type === "job") {
             monitorId = await monitor.getId();
         }
         return new Promise((resolve) => {
             const request = {
-                elementType: (monitor ? "job" : "monitor") as "monitor" | "job",
+                elementType: type,
                 monitorId,
                 controlKey1: nanoid(),
                 controlKey2: nanoid(),
@@ -60,12 +65,16 @@ export class Connection {
                 type: "id-request",
                 overwriteStrategy: monitor?.overwriteStrategy || MonitorOverwrite.CreateNew,
                 monitorLabels: monitor?.labels,
-                jobLabels,
+                jobLabels: job?.labels || [],
                 elementType: request.elementType,
                 monitorId: request.monitorId,
                 controlKey1: request.controlKey1,
                 controlKey2: request.controlKey2,
                 time: request.time,
+                data: {
+                    monitor,
+                    job,
+                },
             });
         });
     };

@@ -14,28 +14,42 @@ export class Monitor {
     private id!: string;
     public readonly description: string;
     public readonly title: string;
+    public readonly authKey: string;
+    public readonly lifeTime: number;
+    public readonly logRotation: number;
     public labels: string[] = [];
     private isMonitorDataSend: boolean = false;
     public readonly overwriteStrategy: MonitorOverwrite;
 
     constructor(
         connection: Connection,
-        options: { title?: string; description?: string; labels?: string[]; overwriteStrategy?: MonitorOverwrite },
+        options: {
+            title?: string;
+            description?: string;
+            labels?: string[];
+            authKey?: string;
+            overwriteStrategy?: MonitorOverwrite;
+            logRotation?: number;
+            lifeTime?: number;
+        },
     ) {
         this.connection = connection;
         this.description = options.description || "";
         this.title = options.title || "";
         this.labels = options.labels || [];
+        this.authKey = options.authKey || "";
+        this.logRotation = options.logRotation || 200;
+        this.lifeTime = options.lifeTime || 3600;
         this.overwriteStrategy = options.overwriteStrategy || MonitorOverwrite.CreateNew;
 
-        connection.requestId(null).then((id) => {
+        connection.requestId("monitor", this).then((id) => {
             this.id = id as string;
         });
     }
 
     public async getId() {
         return new Promise<string>((resolve, reject) => {
-            if (this.id !== null) {
+            if (this.id !== undefined ) {
                 resolve(this.id);
             } else {
                 let interval: number = 0;
@@ -59,7 +73,7 @@ export class Monitor {
     public async createJob(data: IJobData): Promise<Job> {
         // waiting for monitor id
         await this.getId();
-        const jobId = await this.connection.requestId(this, data.labels);
+        const jobId = await this.connection.requestId("job", this, data);
         return new Job(
             {
                 id: jobId,
@@ -91,6 +105,9 @@ export class Monitor {
                     labels: this.labels,
                     title: this.title,
                     overwriteStrategy: this.overwriteStrategy,
+                    authKey: this.authKey,
+                    lifeTime: this.lifeTime,
+                    logRotation: this.logRotation,
                 };
                 this.isMonitorDataSend = true;
             }
