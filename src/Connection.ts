@@ -80,29 +80,34 @@ export class Connection {
     };
 
     private onMessage = (input: string) => {
-        const data = JSON.parse(input);
+        try {
+            const data = JSON.parse(input);
 
-        if (data.type !== undefined && data.type === "id-response") {
-            const index = this.idRequestsPending.findIndex((el) => {
-                if (
-                    el.controlKey1 === data.controlKey1 &&
-                    el.controlKey2 === data.controlKey2 &&
-                    el.time === data.time &&
-                    el.elementType === data.elementType
-                ) {
-                    return true;
-                }
-                return false;
-            });
-            if (index !== -1) {
-                console.log("Znalazłem i wykonuje");
-                this.idRequestsPending[index].resolve(data.id);
-                this.idRequestsPending.splice(index, 1);
-            } else {
-                console.error({
-                    msg: "Not found data to connect key",
+            if (data.type !== undefined && data.type === "id-response") {
+                const index = this.idRequestsPending.findIndex((el) => {
+                    if (
+                        el.controlKey1 === data.controlKey1 &&
+                        el.controlKey2 === data.controlKey2 &&
+                        el.time === data.time &&
+                        el.elementType === data.elementType
+                    ) {
+                        return true;
+                    }
+                    return false;
                 });
+                if (index !== -1) {
+                    console.log("Znalazłem i wykonuje");
+                    this.idRequestsPending[index].resolve(data.id);
+                    this.idRequestsPending.splice(index, 1);
+                } else {
+                    console.error({
+                        msg: "Not found data to connect key",
+                    });
+                }
             }
+        } catch (ex) {
+            console.log("Unexpected message: " + input);
+            console.log(ex);
         }
     };
 
@@ -119,8 +124,9 @@ export class Connection {
                 console.log("Status server connection error");
             });
 
-            this.connection.on("message", (e: NodeWS.MessageEvent) => {
-                this.onMessage(e.data as string);
+            this.connection.on("message", (messageEvent: NodeWS.MessageEvent) => {
+                // @ts-ignore
+                this.onMessage(messageEvent as string);
             });
 
             this.connection.on("close", () => {
