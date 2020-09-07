@@ -35,10 +35,20 @@ export class Connection {
     };
 
     public send = (message: any) => {
-        if (typeof window === "undefined") {
-            this.connection.send(JSON.stringify(message));
-        } else {
-            this.browserConnection.send(JSON.stringify(message));
+        try {
+            const str = JSON.stringify(message);
+
+            if (typeof window === "undefined") {
+                this.connection.send(str);
+            } else {
+                this.browserConnection.send(JSON.stringify(str));
+            }
+        } catch (er) {
+            console.error("---------------------------------");
+            console.error("Can't send message");
+            console.log(message);
+            console.trace();
+            console.error("---------------------------------");
         }
     };
 
@@ -72,7 +82,10 @@ export class Connection {
                 controlKey2: request.controlKey2,
                 time: request.time,
                 data: {
-                    monitor,
+                    monitor: {
+                        title: monitor?.title || "",
+                        description: monitor?.description || "",
+                    },
                     job,
                 },
             });

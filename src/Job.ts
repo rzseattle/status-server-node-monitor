@@ -21,6 +21,7 @@ export class Job {
     private logKindMessage: string[] = [];
     private logKindErrorMessage: string[] = [];
     private readonly labels: string[];
+    private dataToTransport: any = null;
 
     private _isError: boolean = false;
     get isError(): boolean {
@@ -66,7 +67,8 @@ export class Job {
             logsErrorPart: this.logKindErrorMessage,
             done: this.isDone,
             error: this._isError,
-            labels: this.labels
+            labels: this.labels,
+            data: this.dataToTransport
         };
         // @ts-ignore couse throtling decorator
         this.client.requestUpdate(this.id, data, () => {
@@ -87,7 +89,7 @@ export class Job {
             }
             this.logKindMessage = [...this.logKindMessage, ...text];
         } else {
-            console.log(text);
+            console.log("[Logging] " + text);
             this.logKindMessage.push(text);
         }
         this.requestSend();
@@ -106,6 +108,11 @@ export class Job {
 
     public operation = (text: string) => {
         this.currentOperation = text;
+        this.requestSend();
+    };
+
+    public data = (data: any) => {
+        this.dataToTransport = data;
         this.requestSend();
     };
 }

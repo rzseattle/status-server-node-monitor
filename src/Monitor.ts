@@ -49,7 +49,7 @@ export class Monitor {
 
     public async getId() {
         return new Promise<string>((resolve, reject) => {
-            if (this.id !== undefined ) {
+            if (this.id !== undefined) {
                 resolve(this.id);
             } else {
                 let interval: number = 0;
@@ -95,6 +95,7 @@ export class Monitor {
                 logsErrorPart: string[];
                 error: boolean;
                 done: boolean;
+                data: any;
             },
             onSend: () => {},
         ) => {
