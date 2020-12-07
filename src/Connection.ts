@@ -130,7 +130,7 @@ export class Connection {
             this.connection.on("open", () => {
                 console.log("connection is opened");
                 clearTimeout(this.reconnectTimeout);
-                resolve();
+                resolve(null);
             });
 
             this.connection.on("error", () => {
@@ -161,7 +161,7 @@ export class Connection {
             this.browserConnection.addEventListener("open", () => {
                 console.log("connection is opened");
                 clearTimeout(this.reconnectTimeout);
-                resolve();
+                resolve(null);
             });
 
             this.browserConnection.addEventListener("error", () => {
