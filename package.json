@@ -6,7 +6,7 @@
     "scripts": {
         "dev": "tsc -p tsconfig.json --watch",
         "build": "tsc -p tsconfig.json",
-        "run": "docker build -t media.as-pl.com ./build/docker/app/ &&  docker run -v $(pwd):/project -p 4000:4000 media.as-pl.com"
+        "postinstall": "tsc -p tsconfig.json"
     },
     "devDependencies": {
         "@types/express": "^4.17.6",
