@@ -3,10 +3,11 @@
     "version": "1.0.0",
     "main": "index.js",
     "license": "MIT",
+    "type": "module",
     "scripts": {
         "dev": "tsc -p tsconfig.json --watch",
         "build": "tsc -p tsconfig.json",
-        "postinstall": "tsc -p tsconfig.json"
+        "xpostinstall": "tsc -p tsconfig.json"
     },
     "devDependencies": {
         "nodemon": "^2.0.6",
