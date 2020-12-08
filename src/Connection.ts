@@ -21,9 +21,14 @@ export class Connection {
     private reconnectTimeout: number = -1;
 
     private idRequestsPending: IPendingRequest[] = [];
+    private onReconnectCallback: (() => any) | null = null
 
     constructor(url: string) {
         this.url = url;
+    }
+
+    onReconnect = (callback : () => any) =>{
+        this.onReconnectCallback = callback;
     }
 
     public connect = async () => {
@@ -51,6 +56,8 @@ export class Connection {
             console.error("---------------------------------");
         }
     };
+
+
 
     public requestId = async (
         type: "monitor" | "job",

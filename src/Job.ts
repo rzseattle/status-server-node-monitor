@@ -68,7 +68,7 @@ export class Job {
             done: this.isDone,
             error: this._isError,
             labels: this.labels,
-            data: this.dataToTransport
+            data: this.dataToTransport,
         };
         // @ts-ignore couse throtling decorator
         this.client.requestUpdate(this.id, data, () => {
@@ -114,5 +114,13 @@ export class Job {
     public data = (data: any) => {
         this.dataToTransport = data;
         this.requestSend();
+    };
+
+    public cleanup = () => {
+        this.client.requestAction("monitor", this.id, "cleanup");
+    };
+
+    public remove = () => {
+        this.client.requestAction("monitor", this.id, "remove");
     };
 }

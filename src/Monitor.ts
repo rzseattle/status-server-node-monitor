@@ -11,7 +11,7 @@ export enum MonitorOverwrite {
 
 export class Monitor {
     private connection: Connection;
-    private id!: string;
+    private id: string | null = null;
     public readonly description: string;
     public readonly title: string;
     public readonly authKey: string;
@@ -45,11 +45,15 @@ export class Monitor {
         connection.requestId("monitor", this).then((id) => {
             this.id = id as string;
         });
+
+        connection.onReconnect(() => {
+            this.isMonitorDataSend = false;
+        });
     }
 
     public async getId() {
         return new Promise<string>((resolve, reject) => {
-            if (this.id !== undefined) {
+            if (this.id !== null) {
                 resolve(this.id);
             } else {
                 let interval: number = 0;
@@ -99,7 +103,7 @@ export class Monitor {
             },
             onSend: () => {},
         ) => {
-            const message: IJobMessage = { type: "job", jobId, monitorId: this.id, ...data };
+            const message: IJobMessage = { type: "job", jobId, monitorId: this.id as string, ...data };
             if (!this.isMonitorDataSend) {
                 message.monitorData = {
                     description: this.description,
@@ -117,4 +121,24 @@ export class Monitor {
         },
         30,
     );
+
+    public requestAction = async (subjectType: "monitor" | "job", subjectId: string, action: "cleanup" | "remove") => {
+        const message = {
+            type: "action",
+            monitorId: await this.getId(),
+            subjectType,
+            subjectId,
+            action,
+        };
+
+        this.connection.send(message);
+    };
+
+    public cleanup = async () => {
+        this.requestAction("monitor", await this.getId(), "cleanup");
+    };
+
+    public remove = async () => {
+        this.requestAction("monitor", await this.getId(), "remove");
+    };
 }
