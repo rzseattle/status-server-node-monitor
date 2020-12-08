@@ -3,7 +3,6 @@
     "version": "1.0.0",
     "main": "index.js",
     "license": "MIT",
-    "type": "module",
     "scripts": {
         "dev": "tsc -p tsconfig.json --watch",
         "build": "tsc -p tsconfig.json",

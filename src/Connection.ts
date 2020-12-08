@@ -21,15 +21,15 @@ export class Connection {
     private reconnectTimeout: number = -1;
 
     private idRequestsPending: IPendingRequest[] = [];
-    private onReconnectCallback: (() => any) | null = null
+    private onReconnectCallback: (() => any) | null = null;
 
     constructor(url: string) {
         this.url = url;
     }
 
-    onReconnect = (callback : () => any) =>{
+    onReconnect = (callback: () => any) => {
         this.onReconnectCallback = callback;
-    }
+    };
 
     public connect = async () => {
         if (typeof window === "undefined") {
@@ -56,8 +56,6 @@ export class Connection {
             console.error("---------------------------------");
         }
     };
-
-
 
     public requestId = async (
         type: "monitor" | "job",
@@ -136,6 +134,9 @@ export class Connection {
             this.connection = new NodeWS(this.url);
             this.connection.on("open", () => {
                 console.log("connection is opened");
+                if (this.onReconnectCallback !== null) {
+                    this.onReconnectCallback();
+                }
                 clearTimeout(this.reconnectTimeout);
                 resolve(null);
             });
@@ -167,6 +168,9 @@ export class Connection {
             this.browserConnection = new window.WebSocket(this.url);
             this.browserConnection.addEventListener("open", () => {
                 console.log("connection is opened");
+                if (this.onReconnectCallback !== null) {
+                    this.onReconnectCallback();
+                }
                 clearTimeout(this.reconnectTimeout);
                 resolve(null);
             });
