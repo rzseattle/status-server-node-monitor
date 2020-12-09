@@ -131,7 +131,7 @@ export class Connection {
 
     private connectInNode = async () => {
         return new Promise((resolve, reject) => {
-            this.connection = new NodeWS(this.url);
+            this.connection = new NodeWS(this.url, { timeout: 1000 });
             this.connection.on("open", () => {
                 console.log("connection is opened");
                 if (this.onReconnectCallback !== null) {
