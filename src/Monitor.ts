@@ -9,8 +9,6 @@ export enum MonitorOverwrite {
     Replace = "replace",
 }
 
-const throttleTimeout = 30;
-
 interface IMonitorOptions {
     title?: string;
     description?: string;
@@ -21,12 +19,6 @@ interface IMonitorOptions {
     lifeTime?: number;
     throttle?: number;
 }
-
-export const monitorWithThrottle = (connection: Connection, options: IMonitorOptions, newThrottleTimeout: number) => {
-    // tslint:disable-next-line:no-shadowed-variable
-    const throttleTimeout = newThrottleTimeout;
-    return new Monitor(connection, options);
-};
 
 export class Monitor {
     private connection: Connection;
@@ -40,6 +32,22 @@ export class Monitor {
     private isMonitorDataSend: boolean = false;
     public readonly overwriteStrategy: MonitorOverwrite;
     private throttle: number;
+
+    public requestUpdate: (
+        jobId: string,
+        data: {
+            title: string;
+            description: string;
+            progress: { current: number; end: number };
+            currentOperation: string;
+            logsPart: string[];
+            logsErrorPart: string[];
+            error: boolean;
+            done: boolean;
+            data: any;
+        },
+        onSend: () => {},
+    ) => any;
 
     constructor(connection: Connection, options: IMonitorOptions) {
         this.connection = connection;
@@ -59,6 +67,8 @@ export class Monitor {
         connection.onReconnect(() => {
             this.isMonitorDataSend = false;
         });
+
+        this.requestUpdate = throttle(this._requestUpdate, this.throttle);
     }
 
     public async getId() {
@@ -97,40 +107,37 @@ export class Monitor {
         );
     }
 
-    public requestUpdate = throttle(
-        (
-            jobId: string,
-            data: {
-                title: string;
-                description: string;
-                progress: { current: number; end: number };
-                currentOperation: string;
-                logsPart: string[];
-                logsErrorPart: string[];
-                error: boolean;
-                done: boolean;
-                data: any;
-            },
-            onSend: () => {},
-        ) => {
-            const message: IJobMessage = { type: "job", jobId, monitorId: this.id as string, ...data };
-            if (!this.isMonitorDataSend) {
-                message.monitorData = {
-                    description: this.description,
-                    labels: this.labels,
-                    title: this.title,
-                    overwriteStrategy: this.overwriteStrategy,
-                    authKey: this.authKey,
-                    lifeTime: this.lifeTime,
-                    logRotation: this.logRotation,
-                };
-                this.isMonitorDataSend = true;
-            }
-            this.connection.send(message);
-            onSend();
+    public _requestUpdate = (
+        jobId: string,
+        data: {
+            title: string;
+            description: string;
+            progress: { current: number; end: number };
+            currentOperation: string;
+            logsPart: string[];
+            logsErrorPart: string[];
+            error: boolean;
+            done: boolean;
+            data: any;
         },
-        throttleTimeout,
-    );
+        onSend: () => {},
+    ) => {
+        const message: IJobMessage = { type: "job", jobId, monitorId: this.id as string, ...data };
+        if (!this.isMonitorDataSend) {
+            message.monitorData = {
+                description: this.description,
+                labels: this.labels,
+                title: this.title,
+                overwriteStrategy: this.overwriteStrategy,
+                authKey: this.authKey,
+                lifeTime: this.lifeTime,
+                logRotation: this.logRotation,
+            };
+            this.isMonitorDataSend = true;
+        }
+        this.connection.send(message);
+        onSend();
+    };
 
     public requestAction = async (subjectType: "monitor" | "job", subjectId: string, action: "cleanup" | "remove") => {
         const message = {
