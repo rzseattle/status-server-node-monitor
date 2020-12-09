@@ -68,7 +68,11 @@ export class Monitor {
             this.isMonitorDataSend = false;
         });
 
-        this.requestUpdate = throttle(this._requestUpdate, this.throttle);
+        if (this.throttle === 0) {
+            this.requestUpdate = this._requestUpdate;
+        } else {
+            this.requestUpdate = throttle(this._requestUpdate, this.throttle);
+        }
     }
 
     public async getId() {
@@ -107,7 +111,7 @@ export class Monitor {
         );
     }
 
-    public _requestUpdate = (
+    private _requestUpdate = (
         jobId: string,
         data: {
             title: string;
@@ -135,6 +139,7 @@ export class Monitor {
             };
             this.isMonitorDataSend = true;
         }
+        console.log( "Connection passing data");
         this.connection.send(message);
         onSend();
     };
