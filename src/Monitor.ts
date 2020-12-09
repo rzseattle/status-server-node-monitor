@@ -9,6 +9,25 @@ export enum MonitorOverwrite {
     Replace = "replace",
 }
 
+const throttleTimeout = 30;
+
+interface IMonitorOptions {
+    title?: string;
+    description?: string;
+    labels?: string[];
+    authKey?: string;
+    overwriteStrategy?: MonitorOverwrite;
+    logRotation?: number;
+    lifeTime?: number;
+    throttle?: number;
+}
+
+export const monitorWithThrottle = (connection: Connection, options: IMonitorOptions, newThrottleTimeout: number) => {
+    // tslint:disable-next-line:no-shadowed-variable
+    const throttleTimeout = newThrottleTimeout;
+    return new Monitor(connection, options);
+};
+
 export class Monitor {
     private connection: Connection;
     private id: string | null = null;
@@ -20,19 +39,9 @@ export class Monitor {
     public labels: string[] = [];
     private isMonitorDataSend: boolean = false;
     public readonly overwriteStrategy: MonitorOverwrite;
+    private throttle: number;
 
-    constructor(
-        connection: Connection,
-        options: {
-            title?: string;
-            description?: string;
-            labels?: string[];
-            authKey?: string;
-            overwriteStrategy?: MonitorOverwrite;
-            logRotation?: number;
-            lifeTime?: number;
-        },
-    ) {
+    constructor(connection: Connection, options: IMonitorOptions) {
         this.connection = connection;
         this.description = options.description || "";
         this.title = options.title || "";
@@ -41,6 +50,7 @@ export class Monitor {
         this.logRotation = options.logRotation || 200;
         this.lifeTime = options.lifeTime || 3600;
         this.overwriteStrategy = options.overwriteStrategy || MonitorOverwrite.CreateNew;
+        this.throttle = options.throttle ?? 30;
 
         connection.requestId("monitor", this).then((id) => {
             this.id = id as string;
@@ -119,7 +129,7 @@ export class Monitor {
             this.connection.send(message);
             onSend();
         },
-        30,
+        throttleTimeout,
     );
 
     public requestAction = async (subjectType: "monitor" | "job", subjectId: string, action: "cleanup" | "remove") => {
