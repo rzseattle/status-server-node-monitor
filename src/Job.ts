@@ -70,6 +70,7 @@ export class Job {
             labels: this.labels,
             data: this.dataToTransport,
         };
+        console.log("requesting update");
         // @ts-ignore couse throtling decorator
         this.client.requestUpdate(this.id, data, () => {
             this.logKindMessage = [];
