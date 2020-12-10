@@ -11,6 +11,23 @@ export interface IJobData extends IJobInitData {
     labels?: string[];
 }
 
+export enum LogMessageTypes {
+    DEBUG,
+    INFO,
+    NOTICE,
+    WARNING,
+    ERROR,
+    CRITICAL,
+    ALERT,
+    EMERGENCY,
+}
+
+export interface ILogMessage {
+    type: LogMessageTypes;
+    msg: string;
+    time: number;
+}
+
 export class Job {
     private client: Monitor;
     private progressFlag: { current: number; end: number } = { current: -1, end: -1 };
@@ -18,7 +35,7 @@ export class Job {
     private readonly title: string;
     private readonly description: string;
     private currentOperation: string = "";
-    private logKindMessage: string[] = [];
+    private logKindMessage: ILogMessage[] = [];
     private logKindErrorMessage: string[] = [];
     private readonly labels: string[];
     private dataToTransport: any = null;
@@ -83,28 +100,44 @@ export class Job {
         this.requestSend();
     };
 
-    public log = (text: string | string[]) => {
+    public log = (text: string | string[], messageType: LogMessageTypes = LogMessageTypes.INFO) => {
         if (Array.isArray(text)) {
             if (this.isLoggingToConsole) {
                 text.forEach((line) => console.log(line));
             }
-            this.logKindMessage = [...this.logKindMessage, ...text];
+            this.logKindMessage = [
+                ...this.logKindMessage,
+                ...text.map(
+                    (entry): ILogMessage => {
+                        return {
+                            type: messageType,
+                            time: Date.now(),
+                            msg: entry,
+                        };
+                    },
+                ),
+            ];
         } else {
             console.log("[Logging] " + text);
-            this.logKindMessage.push(text);
+            this.logKindMessage.push({
+                type: messageType,
+                time: Date.now(),
+                msg: text,
+            });
         }
         this.requestSend();
     };
 
+    public debug = (text: string | string[]) => {
+        this.log(text, LogMessageTypes.DEBUG);
+    };
+
+    public warning = (text: string | string[]) => {
+        this.log(text, LogMessageTypes.WARNING);
+    };
+
     public error = (text: string | string[]) => {
-        if (Array.isArray(text)) {
-            text.forEach((line) => console.log(line));
-            this.logKindErrorMessage = [...this.logKindErrorMessage, ...text];
-        } else {
-            console.log(text);
-            this.logKindErrorMessage.push(text);
-        }
-        this.requestSend();
+        this.log(text, LogMessageTypes.ERROR);
     };
 
     public operation = (text: string) => {
