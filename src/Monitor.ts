@@ -139,7 +139,6 @@ export class Monitor {
             };
             this.isMonitorDataSend = true;
         }
-        console.log( "Connection passing data");
         this.connection.send(message);
         onSend();
     };

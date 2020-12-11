@@ -99,7 +99,6 @@ export class Job {
         this.progressFlag = { current, end: end ? end : this.progressFlag.end };
         this.requestSend();
     };
-
     public log = (text: string | string[], messageType: LogMessageTypes = LogMessageTypes.INFO) => {
         if (Array.isArray(text)) {
             if (this.isLoggingToConsole) {
@@ -118,7 +117,6 @@ export class Job {
                 ),
             ];
         } else {
-            console.log("[Logging] " + text);
             this.logKindMessage.push({
                 type: messageType,
                 time: Date.now(),
