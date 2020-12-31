@@ -15,10 +15,11 @@ interface IPendingRequest {
 export class Connection {
     private connection!: NodeWS;
     private browserConnection!: WebSocket;
+    private _reconnectTimeout = 15000;
 
     private readonly url: string;
 
-    private reconnectTimeout: number = -1;
+    private reconnectTimeoutToClear: number = -1;
 
     private idRequestsPending: IPendingRequest[] = [];
     private onReconnectCallback: (() => any) | null = null;
@@ -137,7 +138,7 @@ export class Connection {
                 if (this.onReconnectCallback !== null) {
                     this.onReconnectCallback();
                 }
-                clearTimeout(this.reconnectTimeout);
+                clearTimeout(this.reconnectTimeoutToClear);
                 resolve(null);
             });
 
@@ -151,15 +152,17 @@ export class Connection {
             });
 
             this.connection.on("close", () => {
-                console.log("--------------------");
-                console.log("Status server connection is closed");
-                console.log("Trying to open in 5 s");
-                console.log("--------------------");
-
+                console.log(
+                    "Status server connection is closed [ " +
+                        this.url +
+                        " ] Trying to open in " +
+                        this._reconnectTimeout / 1000 +
+                        " s",
+                );
                 // @ts-ignore
-                this.reconnectTimeout = setTimeout(() => {
+                this.reconnectTimeoutToClear = setTimeout(() => {
                     this.connect();
-                }, 5000);
+                }, this._reconnectTimeout);
             });
         });
     };
@@ -171,7 +174,7 @@ export class Connection {
                 if (this.onReconnectCallback !== null) {
                     this.onReconnectCallback();
                 }
-                clearTimeout(this.reconnectTimeout);
+                clearTimeout(this.reconnectTimeoutToClear);
                 resolve(null);
             });
 
@@ -184,15 +187,19 @@ export class Connection {
             });
 
             this.browserConnection.addEventListener("close", () => {
-                console.log("--------------------");
-                console.log("Status server connection is closed");
-                console.log("Trying to open in 5 s");
-                console.log("--------------------");
-
-                // @ts-ignore
-                this.reconnectTimeout = setTimeout(() => {
-                    this.connect();
-                }, 5000);
+                this.connection.on("close", () => {
+                    console.log(
+                        "Status server connection is closed [ " +
+                            this.url +
+                            " ] Trying to open in " +
+                            this._reconnectTimeout / 1000 +
+                            " s",
+                    );
+                    // @ts-ignore
+                    this.reconnectTimeoutToClear = setTimeout(() => {
+                        this.connect();
+                    }, this._reconnectTimeout);
+                });
             });
         });
     };
